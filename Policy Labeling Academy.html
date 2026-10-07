@@ -1,0 +1,580 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Policy Labeling Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a labeling-console shell — top tab bar for the four stages, one centered work column (max ~760px), transcript cards set in mono like a real annotation queue. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --sunk: #eaeef4;
+  --ink: #161a22;
+  --muted: #5a6373;
+  --line: #d9dee7;
+  --accent: #2f43c9;
+  --accent-ink: #ffffff;
+  --accent-soft: #e6e9fb;
+  --ok: #1d7f47; --ok-soft: #e2f3e9;
+  --bad: #b83434; --bad-soft: #fbe7e7;
+  --c-prf: #9a6400; --c-prf-soft: #fbf0d9;
+  --c-thr: #b3261e; --c-thr-soft: #fbe3e1;
+  --c-har: #7a3db0; --c-har-soft: #f0e6fa;
+  --c-hat: #a8295f; --c-hat-soft: #fae4ee;
+  --c-spm: #0b7a70; --c-spm-soft: #dcf3f0;
+  --c-none: #4b5567; --c-none-soft: #e8ebf0;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1117; --surface: #161a22; --sunk: #1d222c; --ink: #e7eaf0; --muted: #9aa3b4; --line: #2b313d;
+  --accent: #8d9bff; --accent-ink: #0e1117; --accent-soft: #232a4a;
+  --ok: #5fcf8e; --ok-soft: #173225; --bad: #ff8a80; --bad-soft: #3a1d1d;
+  --c-prf: #f2b84b; --c-prf-soft: #34290f; --c-thr: #ff7b72; --c-thr-soft: #3a1b1a;
+  --c-har: #c49cf0; --c-har-soft: #2c1f3d; --c-hat: #f37fae; --c-hat-soft: #3a1a29;
+  --c-spm: #4fd1c1; --c-spm-soft: #12302d; --c-none: #aab3c3; --c-none-soft: #252b36;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0e1117; --surface: #161a22; --sunk: #1d222c; --ink: #e7eaf0; --muted: #9aa3b4; --line: #2b313d;
+  --accent: #8d9bff; --accent-ink: #0e1117; --accent-soft: #232a4a;
+  --ok: #5fcf8e; --ok-soft: #173225; --bad: #ff8a80; --bad-soft: #3a1d1d;
+  --c-prf: #f2b84b; --c-prf-soft: #34290f; --c-thr: #ff7b72; --c-thr-soft: #3a1b1a;
+  --c-har: #c49cf0; --c-har-soft: #2c1f3d; --c-hat: #f37fae; --c-hat-soft: #3a1a29;
+  --c-spm: #4fd1c1; --c-spm-soft: #12302d; --c-none: #aab3c3; --c-none-soft: #252b36;
+  color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top-inner { max-width: 960px; margin: 0 auto; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 8px; }
+.brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brand b { font: 800 17px/1 var(--f-display); letter-spacing: -0.01em; }
+.brand span { font: 500 11px/1 var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.tab { appearance: none; border: 0; background: none; color: var(--muted); font: 600 14px/1 var(--f-body); padding: 10px 14px 12px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; display: flex; gap: 8px; align-items: center; }
+.tab .n { font: 500 11px/1 var(--f-mono); border: 1px solid var(--line); border-radius: 4px; padding: 3px 5px; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab[aria-selected="true"] .n { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tab:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+main { max-width: 800px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; letter-spacing: -0.015em; margin: 0; }
+h1 { font-size: clamp(26px, 4.4vw, 36px); line-height: 1.12; font-weight: 800; }
+h2 { font-size: 22px; line-height: 1.2; font-weight: 700; }
+h3 { font-size: 15px; font-weight: 700; letter-spacing: 0; }
+p { margin: 0; max-width: 66ch; }
+.eyebrow { font: 500 11px/1 var(--f-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.stack-lg { display: flex; flex-direction: column; gap: 28px; }
+.muted { color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.spread { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.btn { appearance: none; font: 600 14px/1 var(--f-body); border-radius: 7px; padding: 11px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; font: 600 12px/1 var(--f-body); padding: 5px 8px; border-radius: 5px; background: var(--k-soft); color: var(--k); white-space: nowrap; }
+.chip code { font: 500 11px/1 var(--f-mono); letter-spacing: .04em; }
+.k-PRF { --k: var(--c-prf); --k-soft: var(--c-prf-soft); }
+.k-THR { --k: var(--c-thr); --k-soft: var(--c-thr-soft); }
+.k-HAR { --k: var(--c-har); --k-soft: var(--c-har-soft); }
+.k-HAT { --k: var(--c-hat); --k-soft: var(--c-hat-soft); }
+.k-SPM { --k: var(--c-spm); --k-soft: var(--c-spm-soft); }
+.k-NONE { --k: var(--c-none); --k-soft: var(--c-none-soft); }
+
+/* Transcript card */
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.item-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 9px 14px; background: var(--sunk); border-bottom: 1px solid var(--line); font: 500 11.5px/1.3 var(--f-mono); color: var(--muted); }
+.item-body { padding: 16px 14px; font: 400 15.5px/1.6 var(--f-mono); overflow-wrap: anywhere; }
+.item-note { padding: 12px 14px; border-top: 1px dashed var(--line); font-size: 14px; display: flex; gap: 10px; align-items: flex-start; }
+.item-note .chip { flex: none; }
+.item-note p { min-width: 0; }
+
+/* Slides */
+.slide-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.progress { display: flex; gap: 4px; }
+.progress i { width: 18px; height: 4px; border-radius: 2px; background: var(--line); }
+.progress i.on { background: var(--accent); }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.cat-card { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--k); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cat-card h3 { color: var(--k); }
+.callout { background: var(--accent-soft); border-radius: 8px; padding: 16px 18px; }
+.gloss { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.gloss ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.gloss .box { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; background: var(--surface); min-width: 0; }
+.gloss .box.look h3 { color: var(--k); }
+.gloss .box.not { background: var(--sunk); }
+mark { background: var(--k-soft); color: var(--k); padding: 0 3px; border-radius: 3px; font-weight: 500; }
+.k-NONE mark, mark.neutral { background: var(--sunk); color: var(--ink); }
+.cat-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cat-title h2 { color: var(--k); }
+.rank { width: 100%; border-collapse: collapse; font-size: 14px; }
+.rank td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.rank td:first-child { font: 500 12px var(--f-mono); color: var(--muted); width: 36px; }
+
+/* Labeling */
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.opt { appearance: none; text-align: left; display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px/1.25 var(--f-body); cursor: pointer; min-width: 0; }
+.opt .key { font: 500 11px/1 var(--f-mono); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; flex: none; }
+.opt .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--k); flex: none; }
+.opt:hover:not(:disabled) { border-color: var(--k); }
+.opt.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); text-decoration: line-through; }
+.opt.right { border-color: var(--ok); background: var(--ok-soft); color: var(--ok); box-shadow: 0 0 0 1px var(--ok); }
+.opt:disabled { cursor: default; }
+.fb { border-radius: 8px; padding: 14px 16px; font-size: 14.5px; display: flex; flex-direction: column; gap: 6px; }
+.fb.tip { background: var(--bad-soft); border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent); }
+.fb.tip b { color: var(--bad); }
+.fb.good { background: var(--ok-soft); border: 1px solid color-mix(in srgb, var(--ok) 35%, transparent); }
+.fb.good b { color: var(--ok); }
+.fb.anim { animation: rise .22s ease-out; }
+@keyframes rise { from { transform: translateY(4px); opacity: .4 } to { transform: none; opacity: 1 } }
+@media (prefers-reduced-motion: reduce) { .fb.anim { animation: none; } }
+
+.score { font: 800 56px/1 var(--f-display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.bars { display: flex; flex-direction: column; gap: 10px; }
+.bar { display: grid; grid-template-columns: 150px 1fr 48px; gap: 10px; align-items: center; font-size: 14px; }
+.bar .track { height: 8px; border-radius: 4px; background: var(--sunk); overflow: hidden; }
+.bar .fill { height: 100%; background: var(--k); }
+.bar .v { font: 500 12px var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) { .bar { grid-template-columns: 1fr 44px; } .bar .track { grid-column: 1 / -1; grid-row: 2; } }
+.badge { font: 600 12px/1 var(--f-body); padding: 6px 10px; border-radius: 999px; }
+.badge.pass { background: var(--ok-soft); color: var(--ok); }
+.badge.fail { background: var(--bad-soft); color: var(--bad); }
+
+.doc h2 { margin-top: 8px; }
+.doc ol, .doc ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; max-width: 66ch; }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.tbl { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 14px; }
+.tbl th, .tbl td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: var(--sunk); }
+.tbl tr:last-child td { border-bottom: 0; }
+.quiz { border-color: var(--accent); }
+.qopts { display: flex; flex-direction: column; gap: 8px; }
+.qopt { appearance: none; text-align: left; display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 400 14.5px/1.5 var(--f-mono); cursor: pointer; }
+.qopt .key { font: 500 11px/1 var(--f-mono); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; flex: none; margin-top: 2px; }
+.qopt .qt { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.qopt .chip { flex: none; }
+.qopt:hover:not(:disabled) { border-color: var(--accent); }
+.qopt:disabled { cursor: default; }
+.qopt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.qopt.right { border-color: var(--ok); background: var(--ok-soft); box-shadow: 0 0 0 1px var(--ok); }
+.kbd-hint { font: 400 12px var(--f-mono); color: var(--muted); }
+</style>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand"><b>Policy Labeling Academy</b><span>Project MOD-5 · Annotator onboarding</span></div>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+  </div>
+</header>
+<main id="app"></main>
+
+<script>
+/* ============ DATA ============ */
+const CATS = {
+  PRF: { name: "Profanity", full: "Profanity & Vulgar Language", short: "Swear words or vulgar terms, including disguised spellings, that are not aimed at a person." },
+  THR: { name: "Threat", full: "Threats & Violent Intent", short: "Any statement of intent, wish, or call for others to cause physical harm to a real person, group, or their property." },
+  HAR: { name: "Harassment", full: "Harassment & Bullying", short: "Insults, mockery, or intimidation aimed at a specific person, for reasons unrelated to who they are as part of a group." },
+  HAT: { name: "Hate Speech", full: "Hate Speech", short: "Attacks, stereotypes, or dehumanizing language about people based on a protected characteristic." },
+  SPM: { name: "Spam / Scam", full: "Spam & Scams", short: "Unsolicited promotion, get-rich-quick offers, or attempts to collect logins, money, or personal data." },
+  NONE:{ name: "No violation", full: "No violation", short: "Strong, rude, or emotional language that does not meet any category definition." }
+};
+const ORDER = ["PRF","THR","HAR","HAT","SPM","NONE"];
+
+const TRAIN = {
+  PRF: {
+    def: "Explicit swear words, crude sexual or bodily terms, and disguised versions of them. Profanity is labeled even when the tone is positive. If the profanity is aimed at a person to insult them, it becomes Harassment instead.",
+    look: ["Common swear words in any form (f***, sh*t, b*llsh*t, a**)", "Disguised spellings: symbols or numbers (sh1t, $hit, a$$), extra spaces (s h i t), or missing letters (fck)", "Profanity acronyms: WTF, FFS, BS", "Crude sexual or bodily terms used as filler or emphasis", "Profanity aimed at a thing, situation, or oneself"],
+    not: ["Mild substitutes: darn, heck, frick, shoot, crud", "Words that only contain a swear string inside another word (e.g. a place name)", "Profanity directed at a person → label Harassment", "Profanity alongside a threat or hate → label the more severe category"],
+    ex: [
+      { src: "Message board · #app-feedback", text: "This update is a load of sh*t, nothing works anymore.", hl: "sh*t", why: "The swear word is aimed at the product, not at a person. Nothing else in the message is a violation, so the label is Profanity." },
+      { src: "Audio transcript · 00:42", text: "Just finished the marathon, f***ing exhausted but so happy!!", hl: "f***ing", why: "Profanity counts even when the speaker is happy. The tone does not matter; the word does." }
+    ]
+  },
+  THR: {
+    def: "Any statement of intent, desire, or encouragement to physically harm a real person or group, or to damage their property. This includes conditional threats (\"if you…\"), veiled threats that rely on implication, and calls for other people to carry out harm.",
+    look: ["First person intent: \"I'm going to / I will [hurt, break, beat, shoot] you\"", "Conditional framing: \"If you show up…\", \"Keep talking and…\"", "Location or routine details: \"I know where you live / park / work\"", "Veiled phrasing: \"Would be a shame if something happened…\"", "Calls for others: \"Someone should…\", sharing an address alongside anger", "Wishing serious harm on someone, especially with personal involvement"],
+    not: ["Common idioms: \"killing it\", \"I could murder a pizza\", \"this traffic is killing me\"", "Competitive trash talk about games or sports (\"we'll destroy you tonight\")", "Fiction, song lyrics, or news reporting that describes violence", "Rude dismissal without harm (\"get lost\") → consider Harassment"],
+    ex: [
+      { src: "Message board · #local-meetups", text: "If you show up at the meetup Saturday, I'm going to break your jaw.", hl: "I'm going to break your jaw", why: "A specific person, a specific time, and a specific physical harm. The \"if\" does not soften it; conditional threats are still threats." },
+      { src: "Audio transcript · 02:15", text: "Nice car you parked on Elm Street. Would be a shame if something happened to it.", hl: "Would be a shame if something happened to it", why: "No violent word appears, but the speaker shows they know where the person's property is and implies damage. Veiled threats count." }
+    ]
+  },
+  HAR: {
+    def: "Content that targets a specific, identifiable person with insults, mockery, humiliation, intimidation, or exclusion. The attack is personal. If the attack is based on a protected characteristic (race, religion, gender and so on), label Hate Speech instead.",
+    look: ["@mentions, usernames, or \"you\" paired with an insult", "Name-calling: idiot, loser, clown, braindead", "Mocking someone's looks, intelligence, or personal life", "Telling someone to leave, shut up, or delete their account", "Profanity aimed at a person (\"shut the f*** up\")", "Encouraging a pile-on or posting someone's personal details to embarrass them"],
+    not: ["Criticizing an idea, argument, or piece of work (\"this take makes no sense\")", "Plain disagreement, even blunt disagreement", "Insults tied to a protected group → Hate Speech", "Insults with intent to cause physical harm → Threat"],
+    ex: [
+      { src: "Message board · #running-club", text: "@jess_runs nobody here likes you. Delete your account and do us all a favor.", hl: "nobody here likes you", why: "A named user is singled out and told to leave. There is no swear word, but the message is a personal attack meant to exclude." },
+      { src: "Audio transcript · 05:03", text: "Shut the f*** up, you absolute clown. Nobody asked.", hl: "Shut the f*** up, you absolute clown", why: "This has profanity, but it is aimed at the listener to demean them. When profanity is directed at a person, Harassment takes priority over Profanity." }
+    ]
+  },
+  HAT: {
+    def: "Content that attacks, demeans, stereotypes, or calls for the exclusion of people based on a protected characteristic. Protected characteristics: race, ethnicity, national origin, religion, gender, sexual orientation, gender identity, disability, and age. It applies whether the target is a whole group or one person attacked because of their group.",
+    look: ["Generalizations: \"all / those / you people [group] are…\"", "Dehumanizing comparisons: animals, vermin, disease, parasites", "Claims that a group is inferior, dangerous, or criminal", "Calls to exclude a group from a country, job, or right", "Slurs, including disguised or coded spellings", "An insult to one person that leans on their group (\"typical [group]…\")"],
+    not: ["Criticizing a policy, institution, or belief system (\"I disagree with this church's stance\")", "Reporting on or condemning hate speech", "Neutral mention of a group (\"as a woman in tech, I…\")", "Hateful content that also threatens violence → Threat"],
+    ex: [
+      { src: "Message board · #world-news", text: "People from that religion are all terrorists and shouldn't be allowed in this country.", hl: "all terrorists", why: "A whole religious group is labeled as criminals and the writer calls for their exclusion. Religion is a protected characteristic." },
+      { src: "Audio transcript · 11:48", text: "Women are too emotional to be engineers. They should stay out of tech.", hl: "Women are too emotional", why: "A negative stereotype about gender, followed by a call to exclude. No slur is needed for this to be Hate Speech." }
+    ]
+  },
+  SPM: {
+    def: "Unsolicited commercial promotion, deceptive money-making offers, and phishing or scam attempts that try to get users to click, pay, or hand over passwords, codes, or personal data.",
+    look: ["Links, especially shortened or disguised ones (bit.ly, \"dot com\", \"link in bio\")", "\"DM me\", \"click here\", \"reply to claim\"", "Unrealistic earnings or prizes: \"$5,000/week\", \"you've won\"", "Urgency: \"within 24 hours\", \"limited offer\", \"account will be deleted\"", "Requests for passwords, recovery phrases, card numbers, or codes", "Selling followers, likes, or reviews; crypto bots"],
+    not: ["Sharing a relevant link because someone asked, or as part of the discussion", "Recommending a product you use when it fits the conversation", "Official announcements from the platform itself"],
+    ex: [
+      { src: "Message board · #general", text: "🔥 Make $5,000/week from home!! DM me or click bit.ly/xx-cash 🔥", hl: "bit.ly/xx-cash", why: "Off-topic, unrealistic earnings, a shortened link, and a \"DM me\" call to action. Classic promotional spam." },
+      { src: "Message board · Direct message", text: "Your account has been flagged. Verify your login here within 24h or it will be deleted: secure-login-verify.co", hl: "Verify your login here within 24h", why: "Urgency plus a request for credentials on a look-alike domain. This is phishing, which falls under Spam & Scams." }
+    ]
+  }
+};
+
+/* Training check: "Which demonstrates [label]?" — one correct phrase, three near-misses. k = the label the phrase actually gets. */
+const QUIZ = {
+  PRF: [
+    { t:"Ugh, my sh*tty laptop died right before the deadline.", k:"PRF", why:"A swear word aimed at a thing, with no person targeted. This is Profanity." },
+    { t:"Frick, I left my keys in the car again.", k:"NONE", why:"\"Frick\" is a mild substitute, not profanity. No violation." },
+    { t:"You're a worthless sack of sh*t, @dan_p.", k:"HAR", why:"The profanity is aimed at a named user, so it's Harassment, which outranks Profanity." },
+    { t:"I'll f***ing end you if you post that again.", k:"THR", why:"There's profanity, but this is a conditional threat. Threat outranks everything." }
+  ],
+  THR: [
+    { t:"This boss fight is going to kill me, I've died 40 times.", k:"NONE", why:"\"Going to kill me\" is an idiom about a hard video game. No one is in danger." },
+    { t:"I see you jog past the park every morning at 6. Enjoy it while you can.", k:"THR", why:"Knowing someone's routine plus \"enjoy it while you can\" implies harm. That's a veiled Threat." },
+    { t:"You're a coward and everyone in this group knows it.", k:"HAR", why:"A personal insult with no harm implied. That's Harassment." },
+    { t:"The documentary shows how the gang threatened local shop owners.", k:"NONE", why:"This reports on violence. It doesn't threaten anyone." }
+  ],
+  HAR: [
+    { t:"Your argument ignores the 2019 data completely.", k:"NONE", why:"This criticizes an argument, not the person. Blunt disagreement is allowed." },
+    { t:"People with disabilities are a burden and shouldn't get jobs.", k:"HAT", why:"This attacks a group based on disability, a protected characteristic. That's Hate Speech." },
+    { t:"This restaurant's service was a f***ing joke.", k:"PRF", why:"Profanity aimed at a business, not a person. That's Profanity." },
+    { t:"@tomas_b imagine being this ugly and still posting selfies every day.", k:"HAR", why:"A named user is mocked for their looks. That's Harassment." }
+  ],
+  HAT: [
+    { t:"The new immigration bill is poorly written and far too expensive.", k:"NONE", why:"This criticizes a policy, not people. No violation." },
+    { t:"@kev_92 you're the worst player on this server, just uninstall.", k:"HAR", why:"A personal insult with no protected characteristic involved. That's Harassment." },
+    { t:"Deaf people are basically useless. They shouldn't be allowed to work with customers.", k:"HAT", why:"A whole group is demeaned and excluded based on disability. That's Hate Speech." },
+    { t:"As a woman in engineering, I've had to work twice as hard to be heard.", k:"NONE", why:"A neutral, first-person mention of a group. Nothing here attacks anyone." }
+  ],
+  SPM: [
+    { t:"Here's the recipe you asked for: [link]", k:"NONE", why:"Someone asked for this link and it's relevant. Not spam." },
+    { t:"URGENT: your package is on hold. Pay the $1.99 fee at parcel-redelivery.info to release it.", k:"SPM", why:"Urgency, a small fee and a look-alike domain. This is a classic payment scam." },
+    { t:"I've used this keyboard for two years and it's held up great. Would recommend for your setup.", k:"NONE", why:"An organic recommendation that fits the conversation. Not spam." },
+    { t:"Moderator notice: the forum will be down Sunday night for maintenance.", k:"NONE", why:"An official platform announcement. Not spam." }
+  ]
+};
+
+const SANDBOX = [
+  { id:"S-01", src:"Message board · #bug-reports", text:"Can someone tell me why the f*** the app logs me out every five minutes?", a:"PRF",
+    why:"The profanity is aimed at the app, not at a person. It is the only issue, so Profanity is correct.",
+    tips:{ HAR:"Nobody is being insulted here. The anger is directed at the app. Harassment needs a person as the target.", NONE:"Look again at \"the f***\". A disguised swear word still counts as profanity." } },
+  { id:"S-02", src:"Audio transcript · 03:27", text:"That ref better watch his back after the game. I know which car is his.", a:"THR",
+    why:"\"Watch his back\" plus \"I know which car is his\" implies harm and shows knowledge of the person's property. That is a veiled threat.",
+    tips:{ HAR:"This goes beyond an insult. \"Watch his back\" and knowing which car is his imply physical harm. That makes it a Threat.", NONE:"There is no violent word, but the implication is clear. \"I know which car is his\" is the key phrase. Veiled threats count." } },
+  { id:"S-03", src:"Message board · #photography", text:"@mike_d you're the dumbest person on this forum, every post you make is garbage.", a:"HAR",
+    why:"A named user is insulted personally. There's no protected characteristic involved and no harm implied, so it's Harassment.",
+    tips:{ PRF:"\"Dumbest\" and \"garbage\" are insults, not swear words. The issue is that a specific user, @mike_d, is being attacked.", HAT:"The insult is about Mike personally, not his race, religion, gender or another protected group. That makes it Harassment.", NONE:"Criticizing a photo would be fine. Calling @mike_d \"the dumbest person on this forum\" attacks the person, not the work." } },
+  { id:"S-04", src:"Message board · #city-council", text:"Immigrants are like rats. They multiply and ruin every neighborhood they touch.", a:"HAT",
+    why:"Comparing a group defined by national origin to rats is dehumanizing language, which is a core sign of Hate Speech.",
+    tips:{ HAR:"No individual is targeted. The attack is on a whole group defined by national origin, which is Hate Speech.", NONE:"This isn't policy criticism. \"Like rats\" is a dehumanizing comparison aimed at a group of people.", THR:"There's no statement of intent to cause harm. The comparison to rats is dehumanizing, which makes this Hate Speech." } },
+  { id:"S-05", src:"Message board · #creators", text:"Limited offer! Get 1,000 followers for $9.99, link in my bio 👉 followboost dot net", a:"SPM",
+    why:"Selling followers, urgency (\"limited offer\") and a disguised link (\"dot net\") are all spam signals.",
+    tips:{ NONE:"Look at \"followboost dot net\". Writing out \"dot\" is a common trick to dodge link filters. Selling followers is spam." } },
+  { id:"S-06", src:"Audio transcript · 00:58", text:"Our team absolutely murdered the playoffs last night, what a game!", a:"NONE", tricky:true,
+    why:"\"Murdered\" is a sports idiom meaning \"won decisively\". No one is threatened and there's no profanity. Labeling this would be a false positive.",
+    tips:{ THR:"Read it in context. \"Murdered the playoffs\" means the team won big. Idioms about sports and games aren't threats.", PRF:"\"Murdered\" is not a swear word. Nothing here is vulgar." } },
+  { id:"S-07", src:"Audio transcript · 07:12", text:"Shut up, you braindead sh*tstain. Nobody asked.", a:"HAR", tricky:true,
+    why:"There is profanity, but it's aimed at the listener to demean them. When profanity is directed at a person, label Harassment.",
+    tips:{ PRF:"Close, but check who the profanity is aimed at. \"You braindead sh*tstain\" is directed at a person, so Harassment outranks Profanity.", THR:"Rude and hostile, but there's no intent to physically harm anyone. That makes it Harassment." } },
+  { id:"S-08", src:"Message board · #streamer-drama", text:"Someone should really teach that streamer a lesson. Her address is posted in the Discord.", a:"THR", tricky:true,
+    why:"\"Someone should teach her a lesson\" combined with pointing others to her home address is a call for others to cause harm. That is a Threat.",
+    tips:{ HAR:"It looks like harassment, but pairing \"teach her a lesson\" with her home address encourages others to act physically. Threat is the more severe label and takes priority.", NONE:"\"Teach a lesson\" plus a home address is a call for others to take action against her. That's a Threat." } },
+  { id:"S-09", src:"Message board · #local-politics", text:"I disagree with the church's position on this zoning policy. Their leadership is out of touch.", a:"NONE", tricky:true,
+    why:"This criticizes an institution's position, not people for their religion. Disagreement with a policy is allowed.",
+    tips:{ HAT:"Criticizing a religious institution's stance on a policy is not an attack on people because of their faith. Nobody is stereotyped or dehumanized.", HAR:"\"Out of touch\" is criticism of leadership decisions, not a personal attack on an identifiable user." } },
+  { id:"S-10", src:"Message board · Direct message", text:"Congrats! You've been selected for a $500 gift card. Reply with your email and password to claim.", a:"SPM",
+    why:"An unexpected prize plus a request for a password is a textbook phishing attempt.",
+    tips:{ NONE:"No one legitimately needs your password to send a prize. \"Reply with your email and password\" is the giveaway." } },
+  { id:"S-11", src:"Audio transcript · 14:30", text:"Typical woman driver. You people shouldn't be allowed behind a wheel.", a:"HAT", tricky:true,
+    why:"The insult is aimed at one person, but it relies on her gender (\"typical woman\", \"you people\"). Attacks based on a protected characteristic are Hate Speech.",
+    tips:{ HAR:"It's aimed at one person, but the attack is built on her gender (\"typical woman\", \"you people\"). When a protected characteristic drives the insult, label Hate Speech." } },
+  { id:"S-12", src:"Message board · #patch-notes", text:"Holy sh1t this patch is amazing, best update in years!!", a:"PRF",
+    why:"\"sh1t\" is a disguised swear word. The message is positive, but profanity counts regardless of tone.",
+    tips:{ NONE:"Look at \"sh1t\". A number swapped in for a letter is still profanity, and positive tone doesn't change that." } }
+];
+
+const TEST = [
+  { id:"T-01", src:"Message board · #weekend-plans", text:"This b*llsh*t weather has ruined three weekends in a row.", a:"PRF" },
+  { id:"T-02", src:"Audio transcript · 01:36", text:"Keep talking and I'll be waiting outside your office at 5. We'll see how brave you are then.", a:"THR" },
+  { id:"T-03", src:"Message board · #selfie-sunday", text:"lol look at @sara.k's profile pic, imagine posting that face in public 🤢", a:"HAR" },
+  { id:"T-04", src:"Message board · #parenting", text:"Gay people shouldn't be allowed to adopt. They're a danger to children.", a:"HAT" },
+  { id:"T-05", src:"Message board · #careers", text:"Tired of your 9-5? I turned $200 into $20k with this crypto bot. DM 'BOT' for access 🚀", a:"SPM" },
+  { id:"T-06", src:"Audio transcript · 09:04", text:"I'm going to destroy you in the rematch tonight, prepare to lose 😤", a:"NONE" },
+  { id:"T-07", src:"Message board · #film-club", text:"WTF is this ending?? I want my 3 hours back.", a:"PRF" },
+  { id:"T-08", src:"Message board · #book-club", text:"Who asked you, idiot? Go back to lurking.", a:"HAR" },
+  { id:"T-09", src:"Audio transcript · 06:51", text:"People like you deserve to get hit by a bus. And I'd happily be driving it.", a:"THR" },
+  { id:"T-10", src:"Message board · #elections", text:"Old people are useless leeches on society and should stop voting.", a:"HAT" },
+  { id:"T-11", src:"Message board · #personal-finance", text:"Someone asked about saving money earlier, so here's the budgeting guide I wrote last year: [link]", a:"NONE" },
+  { id:"T-12", src:"Message board · Direct message", text:"Hi friend, I'm a verified support agent. Send me your recovery phrase so I can fix your wallet.", a:"SPM" }
+];
+const PASS = 10;
+
+/* ============ STATE ============ */
+const S = { tab: "guide", slide: 0, quiz: {}, sb: { i: 0, tried: [], done: false, first: {} }, t: { started: false, i: 0, sel: null, ans: {}, done: false } };
+const TABS = [["guide","Guidelines"],["train","Training"],["sandbox","Sandbox"],["test","Test"]];
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const chip = k => `<span class="chip k-${k}"><code>${k}</code>${CATS[k].name}</span>`;
+
+function renderTabs() {
+  document.getElementById("tabs").innerHTML = TABS.map(([k,l],i) =>
+    `<button class="tab" role="tab" aria-selected="${S.tab===k}" data-tab="${k}"><span class="n">${i+1}</span>${l}</button>`).join("");
+}
+document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) go(b.dataset.tab); });
+function go(tab) { S.tab = tab; render(); window.scrollTo({ top: 0 }); }
+
+/* ============ GUIDELINES ============ */
+function guide() {
+  return `<div class="stack-lg doc">
+  <div class="stack">
+    <span class="eyebrow">Project concept</span>
+    <h1>Community policy labeling, MOD-5</h1>
+    <p>Annotators review short pieces of user content and assign one policy label to each. The labels train and evaluate an automated moderation system, so accuracy in both directions matters: missed violations let harmful content through, and false positives punish users who did nothing wrong.</p>
+  </div>
+  <div class="panel stack">
+    <h2>What you'll see</h2>
+    <p>Each task shows one item from one of two sources:</p>
+    <ul>
+      <li><b>Message board posts</b>, shown with the channel name (for example <code>#city-council</code>) or "Direct message".</li>
+      <li><b>Audio transcripts</b>: a single quote from a voice recording, shown with its timestamp (for example <code>03:27</code>). Judge the words as transcribed. Don't guess at tone of voice.</li>
+    </ul>
+  </div>
+  <div class="stack">
+    <h2>The labels</h2>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Code</th><th>Label</th><th>Definition</th></tr></thead>
+      <tbody>${ORDER.map(k => `<tr><td>${chip(k)}</td><td><b>${CATS[k].full}</b></td><td>${CATS[k].short}</td></tr>`).join("")}</tbody>
+    </table></div>
+  </div>
+  <div class="panel stack">
+    <h2>Labeling workflow</h2>
+    <ol>
+      <li>Read the full item once without labeling. Note who or what the language is aimed at.</li>
+      <li>Ask whether the item meets any category definition. If none applies, label <b>NONE</b>, even if the text is rude or angry.</li>
+      <li>If more than one category applies, choose the highest-ranked one (see below). Each item gets exactly one label.</li>
+      <li>Judge the literal content in context. Don't assume hidden meanings, and don't ignore clear ones.</li>
+    </ol>
+  </div>
+  <div class="stack">
+    <h2>When more than one label fits</h2>
+    <p class="muted">Pick the most severe category present. Rank 1 beats everything below it.</p>
+    <div class="panel"><table class="rank"><tbody>
+      <tr><td>1</td><td>${chip("THR")}</td><td>Any real risk of physical harm overrides everything else.</td></tr>
+      <tr><td>2</td><td>${chip("HAT")}</td><td>An attack driven by a protected characteristic, even if aimed at one person.</td></tr>
+      <tr><td>3</td><td>${chip("HAR")}</td><td>A personal attack on an individual, including profanity aimed at someone.</td></tr>
+      <tr><td>4</td><td>${chip("SPM")}</td><td>Promotion, scams, phishing.</td></tr>
+      <tr><td>5</td><td>${chip("PRF")}</td><td>Use only when profanity is the sole issue.</td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="panel stack">
+    <h2>Avoiding false positives</h2>
+    <ul>
+      <li><b>Idioms aren't threats.</b> "Killing it", "murdered the playoffs", "I'll destroy you in ranked" are normal speech.</li>
+      <li><b>Criticizing ideas isn't harassment.</b> Attacking an argument, a product, or a policy is allowed. Attacking the person is not.</li>
+      <li><b>Criticizing institutions isn't hate speech.</b> Disagreeing with a church, government or company is allowed. Attacking people for belonging to a group is not.</li>
+      <li><b>Relevant links aren't spam.</b> A link someone asked for, or one that fits the conversation, is fine.</li>
+      <li><b>Mild words aren't profanity.</b> darn, heck, frick, shoot.</li>
+    </ul>
+  </div>
+  <div class="panel stack">
+    <h2>Certification path</h2>
+    <p><b>Training</b> walks through each category with a glossary and two worked examples. <b>Sandbox</b> is 12 practice items with instant tips when you choose wrong. <b>Test</b> is 12 new items with no feedback; passing requires ${PASS} of 12 correct.</p>
+    <div class="row"><button class="btn primary" onclick="go('train')">Start training</button></div>
+  </div>
+</div>`;
+}
+
+/* ============ TRAINING ============ */
+const SLIDES = ["overview","glance","PRF","THR","HAR","HAT","SPM","rank"];
+function hl(text, phrase) { const t = esc(text), p = esc(phrase); return t.replace(p, `<mark>${p}</mark>`); }
+function exCard(e, k) {
+  return `<div class="item k-${k}"><div class="item-head"><span>${esc(e.src)}</span><span>Example</span></div>
+  <div class="item-body">${hl(e.text, e.hl)}</div>
+  <div class="item-note">${chip(k)}<p>${e.why}</p></div></div>`;
+}
+function slideBody(s) {
+  if (s === "overview") return `<div class="stack-lg">
+    <div class="stack"><span class="eyebrow">Task overview</span><h1>Read it, decide if it breaks a rule, label it.</h1></div>
+    <p>In this project you'll review short pieces of user content: posts from community message boards and quotes transcribed from audio recordings. For each item, you choose whether it violates our community guidelines and, if so, which policy it breaks.</p>
+    <div class="callout stack"><h3>Purpose</h3><p>Your labels teach our moderation system to recognize harmful content. The goal is to identify and correctly tag every violation of our community guidelines while keeping false positives as low as possible, so people who are simply passionate, blunt or joking aren't penalized.</p></div>
+    <div class="stack"><h3>How each task works</h3>
+    <div class="item"><div class="item-head"><span>Message board · #general</span><span>Item 0042</span></div><div class="item-body">Read the text exactly as it's shown here.</div><div class="item-note"><span class="muted">→</span><p>Pick one of six labels: one of the five violation types, or <b>No violation</b>.</p></div></div></div>
+  </div>`;
+  if (s === "glance") return `<div class="stack-lg">
+    <div class="stack"><span class="eyebrow">The five categories</span><h1>Five ways content can cross the line</h1></div>
+    <p>Users sometimes express themselves in strong terms. Emotions run high in discussions about sports, politics, products and each other, and most heated language is still allowed. We want our system to identify any and all real violations and tag them correctly, while avoiding false positives on content that's merely blunt, emotional or figurative.</p>
+    <div class="cat-grid">${["PRF","THR","HAR","HAT","SPM"].map(k => `<div class="cat-card k-${k}"><div class="row"><span class="chip k-${k}"><code>${k}</code></span></div><h3>${CATS[k].full}</h3><p class="muted" style="font-size:14px">${CATS[k].short}</p></div>`).join("")}
+    <div class="cat-card k-NONE"><div class="row"><span class="chip k-NONE"><code>NONE</code></span></div><h3>No violation</h3><p class="muted" style="font-size:14px">${CATS.NONE.short}</p></div></div>
+  </div>`;
+  if (s === "rank") return `<div class="stack-lg">
+    <div class="stack"><span class="eyebrow">Putting it together</span><h1>One item, one label: the most severe one</h1></div>
+    <p>Real content often mixes problems. A message can swear and threaten at the same time. Always pick the highest-ranked category that applies.</p>
+    <div class="panel"><table class="rank"><tbody>
+      <tr><td>1</td><td>${chip("THR")}</td></tr><tr><td>2</td><td>${chip("HAT")}</td></tr><tr><td>3</td><td>${chip("HAR")}</td></tr><tr><td>4</td><td>${chip("SPM")}</td></tr><tr><td>5</td><td>${chip("PRF")}</td></tr>
+    </tbody></table></div>
+    <div class="item k-HAR"><div class="item-head"><span>Audio transcript · 05:03</span><span>Mixed example</span></div>
+      <div class="item-body"><mark>Shut the f*** up</mark>, you absolute clown.</div>
+      <div class="item-note">${chip("HAR")}<p>Profanity (rank 5) is present, but it's aimed at a person, which is Harassment (rank 3). Harassment wins.</p></div></div>
+    <div class="callout stack"><h3>Next: the Sandbox</h3><p>You'll label 12 practice items. Choose wrong and you'll get a tip right away, then you can try again. Number keys 1–6 select a label.</p>
+    <div class="row"><button class="btn primary" onclick="go('sandbox')">Open the Sandbox</button></div></div>
+  </div>`;
+  const t = TRAIN[s], c = CATS[s];
+  return `<div class="stack-lg k-${s}">
+    <div class="stack"><span class="eyebrow">Category ${["PRF","THR","HAR","HAT","SPM"].indexOf(s)+1} of 5</span>
+      <div class="cat-title"><h1 style="color:var(--k)">${c.full}</h1><span class="chip k-${s}"><code>${s}</code></span></div>
+      <p>${t.def}</p></div>
+    <div class="stack"><h2>Examples</h2>${t.ex.map(e => exCard(e, s)).join("")}</div>
+    <div class="stack"><h2>Glossary: what to watch for</h2>
+      <div class="gloss">
+        <div class="box look k-${s}"><h3>Signals of ${c.name}</h3><ul>${t.look.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+        <div class="box not"><h3>Not ${c.name} on its own</h3><ul>${t.not.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+      </div></div>
+    ${quiz(s)}
+  </div>`;
+}
+function quiz(s) {
+  const tried = S.quiz[s] || [], qs = QUIZ[s], solved = tried.some(i => qs[i].k === s);
+  const last = tried[tried.length-1];
+  let fb = "";
+  if (solved) { const c = qs.find(q => q.k === s); fb = `<div class="fb good anim"><b>Correct</b><span>${c.why}</span></div>`; }
+  else if (last !== undefined) fb = `<div class="fb tip anim"><b>Not quite. This one is ${CATS[qs[last].k].name}.</b><span>${qs[last].why} Try another.</span></div>`;
+  return `<div class="panel stack quiz">
+    <span class="eyebrow">Check yourself</span>
+    <h2>Which of these demonstrates ${CATS[s].full}?</h2>
+    <div class="qopts">${qs.map((q,i) => {
+      const done = tried.includes(i) || solved;
+      const cls = tried.includes(i) ? (q.k === s ? "right" : "wrong") : "";
+      return `<button class="qopt ${cls}" data-q="${s}" data-i="${i}" ${done?"disabled":""}><span class="key">${"ABCD"[i]}</span><span class="qt">${esc(q.t)}</span>${tried.includes(i) || solved ? `<span class="chip k-${q.k}"><code>${q.k}</code></span>` : ""}</button>`;
+    }).join("")}</div>
+    ${fb}
+  </div>`;
+}
+function train() {
+  const s = SLIDES[S.slide];
+  return `<div class="stack-lg">
+    <div class="slide-meta"><span class="eyebrow">Training · Slide ${S.slide+1} of ${SLIDES.length}</span><div class="progress">${SLIDES.map((_,i)=>`<i class="${i<=S.slide?"on":""}"></i>`).join("")}</div></div>
+    ${slideBody(s)}
+    <div class="spread"><button class="btn" id="prev" ${S.slide===0?"disabled":""}>← Back</button>
+    ${S.slide < SLIDES.length-1 ? `<button class="btn primary" id="next">Next →</button>` : ""}</div>
+  </div>`;
+}
+
+/* ============ SANDBOX ============ */
+function options(state, cls) {
+  return `<div class="opts">${ORDER.map((k,i) => `<button class="opt k-${k} ${cls(k)}" data-k="${k}" ${state(k)}><span class="key">${i+1}</span><span class="dot"></span>${CATS[k].name}</button>`).join("")}</div>`;
+}
+function sandbox() {
+  const sb = S.sb;
+  if (sb.done) {
+    const n = SANDBOX.filter(q => sb.first[q.id]).length;
+    return `<div class="stack-lg"><div class="stack"><span class="eyebrow">Sandbox complete</span><h1>Practice finished</h1></div>
+      <div class="panel stack"><div class="score">${n}<span class="muted" style="font-size:24px">/12</span></div><p class="muted">Correct on the first try. The test needs ${PASS} of 12 and gives no hints.</p></div>
+      <div class="panel stack"><h3>Items you missed on the first try</h3>${SANDBOX.filter(q=>!sb.first[q.id]).map(q=>`<div class="row"><span class="kbd-hint">${q.id}</span>${chip(q.a)}<span style="min-width:0">${esc(q.text)}</span></div>`).join("") || "<p>None. Nice work.</p>"}</div>
+      <div class="row"><button class="btn" id="sbreset">Retry Sandbox</button><button class="btn primary" onclick="go('test')">Go to the Test</button></div></div>`;
+  }
+  const q = SANDBOX[sb.i], solved = sb.tried.includes(q.a), last = sb.tried[sb.tried.length-1];
+  let fb = "";
+  if (solved) fb = `<div class="fb good anim"><b>Correct: ${CATS[q.a].full}</b><span>${q.why}</span></div>`;
+  else if (last) fb = `<div class="fb tip anim"><b>Not ${CATS[last].name}. Try again.</b><span>${q.tips[last] || genericTip(last, q)}</span></div>`;
+  return `<div class="stack-lg">
+    <div class="slide-meta"><span class="eyebrow">Sandbox · Item ${sb.i+1} of ${SANDBOX.length}</span><div class="progress">${SANDBOX.map((_,i)=>`<i class="${i<=sb.i?"on":""}"></i>`).join("")}</div></div>
+    <div class="item"><div class="item-head"><span>${esc(q.src)}</span><span>${q.id}${q.tricky?" · tricky":""}</span></div><div class="item-body">${esc(q.text)}</div></div>
+    <div class="stack"><div class="spread"><h3>Which label applies?</h3><span class="kbd-hint">Keys 1–6</span></div>
+    ${options(k => solved || sb.tried.includes(k) ? "disabled" : "", k => k===q.a && solved ? "right" : sb.tried.includes(k) ? "wrong" : "")}</div>
+    ${fb}
+    <div class="spread"><span class="muted" style="font-size:13px">${Object.values(sb.first).filter(Boolean).length} correct on first try so far</span>
+    <button class="btn primary" id="sbnext" ${solved?"":"disabled"}>${sb.i===SANDBOX.length-1?"See results":"Next item →"}</button></div>
+  </div>`;
+}
+function genericTip(chosen, q) {
+  const notes = {
+    PRF: "Profanity only applies when a swear word is present and isn't aimed at a person.",
+    THR: "A Threat needs intent, a wish, or a call to cause physical harm, stated or clearly implied.",
+    HAR: "Harassment needs a specific person as the target of an insult or intimidation.",
+    HAT: "Hate Speech needs an attack tied to a protected characteristic such as race, religion, gender or age.",
+    SPM: "Spam needs promotion, a scam, or an attempt to collect money or personal data.",
+    NONE: "Something in this item does meet a category definition. Look for who or what the language targets."
+  };
+  return notes[chosen];
+}
+function sbPick(k) {
+  const sb = S.sb, q = SANDBOX[sb.i];
+  if (sb.tried.includes(q.a) || sb.tried.includes(k)) return;
+  if (sb.tried.length === 0) sb.first[q.id] = (k === q.a);
+  sb.tried.push(k); render();
+}
+
+/* ============ TEST ============ */
+function test() {
+  const t = S.t;
+  if (!t.started) return `<div class="stack-lg">
+    <div class="stack"><span class="eyebrow">Certification</span><h1>Labeling test</h1></div>
+    <p>12 new items. Choose one label for each and submit. You won't see whether an answer was right until the end, and you can't go back.</p>
+    <div class="panel stack"><div class="spread"><span>Items</span><b>12</b></div><div class="spread"><span>Passing score</span><b>${PASS} / 12</b></div><div class="spread"><span>Feedback</span><b>Score and category breakdown at the end</b></div></div>
+    <div class="row"><button class="btn primary" id="tstart">Start the test</button></div></div>`;
+  if (t.done) {
+    const n = TEST.filter(q => t.ans[q.id] === q.a).length, pass = n >= PASS;
+    const rows = ORDER.map(k => { const qs = TEST.filter(q=>q.a===k), c = qs.filter(q=>t.ans[q.id]===k).length; return `<div class="bar k-${k}"><span>${CATS[k].name}</span><div class="track"><div class="fill" style="width:${qs.length?c/qs.length*100:0}%"></div></div><span class="v">${c}/${qs.length}</span></div>`; }).join("");
+    return `<div class="stack-lg"><div class="stack"><span class="eyebrow">Test complete</span><h1>${pass?"You passed":"Not quite yet"}</h1></div>
+      <div class="panel stack"><div class="row"><div class="score">${n}<span class="muted" style="font-size:24px">/12</span></div><span class="badge ${pass?"pass":"fail"}">${pass?"PASS":"BELOW " + PASS + "/12"}</span></div>
+      <p class="muted">${pass ? "You're cleared to start on live MOD-5 tasks." : "Review the categories where you dropped points, then try the Sandbox again before retaking."}</p></div>
+      <div class="panel stack"><h3>Accuracy by correct label</h3><div class="bars">${rows}</div></div>
+      <div class="row"><button class="btn" onclick="go('train')">Review training</button><button class="btn primary" id="tretake">Retake test</button></div></div>`;
+  }
+  const q = TEST[t.i];
+  return `<div class="stack-lg">
+    <div class="slide-meta"><span class="eyebrow">Test · Item ${t.i+1} of ${TEST.length}</span><div class="progress">${TEST.map((_,i)=>`<i class="${i<=t.i?"on":""}"></i>`).join("")}</div></div>
+    <div class="item"><div class="item-head"><span>${esc(q.src)}</span><span>${q.id}</span></div><div class="item-body">${esc(q.text)}</div></div>
+    <div class="stack"><div class="spread"><h3>Which label applies?</h3><span class="kbd-hint">Keys 1–6 · Enter to submit</span></div>
+    ${options(() => "", k => t.sel===k ? "sel" : "")}</div>
+    <div class="spread"><span></span><button class="btn primary" id="tsubmit" ${t.sel?"":"disabled"}>${t.i===TEST.length-1?"Submit and finish":"Submit answer →"}</button></div>
+  </div>`;
+}
+function tSubmit() { const t = S.t; if (!t.sel) return; t.ans[TEST[t.i].id] = t.sel; t.sel = null; if (t.i === TEST.length-1) t.done = true; else t.i++; render(); }
+
+/* ============ RENDER + EVENTS ============ */
+function render() {
+  renderTabs();
+  const app = document.getElementById("app");
+  app.innerHTML = { guide, train, sandbox, test }[S.tab]();
+}
+document.getElementById("app").addEventListener("click", e => {
+  const id = e.target.closest("button")?.id, opt = e.target.closest(".opt"), qo = e.target.closest(".qopt");
+  if (qo && !qo.disabled) { const s = qo.dataset.q; (S.quiz[s] = S.quiz[s] || []).push(+qo.dataset.i); render(); return; }
+  if (id === "prev" && S.slide > 0) { S.slide--; render(); scrollTo({top:0}); }
+  else if (id === "next") { S.slide++; render(); scrollTo({top:0}); }
+  else if (opt && S.tab === "sandbox") sbPick(opt.dataset.k);
+  else if (opt && S.tab === "test") { S.t.sel = opt.dataset.k; render(); }
+  else if (id === "sbnext") { const sb = S.sb; if (sb.i === SANDBOX.length-1) sb.done = true; else { sb.i++; sb.tried = []; } render(); scrollTo({top:0}); }
+  else if (id === "sbreset") { S.sb = { i:0, tried:[], done:false, first:{} }; render(); }
+  else if (id === "tstart") { S.t.started = true; render(); }
+  else if (id === "tsubmit") tSubmit();
+  else if (id === "tretake") { S.t = { started:true, i:0, sel:null, ans:{}, done:false }; render(); }
+});
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 6) {
+    const k = ORDER[n-1];
+    if (S.tab === "sandbox" && !S.sb.done) sbPick(k);
+    if (S.tab === "test" && S.t.started && !S.t.done) { S.t.sel = k; render(); }
+  } else if (e.key === "Enter" && S.tab === "test" && S.t.started && !S.t.done && S.t.sel) { e.preventDefault(); tSubmit(); }
+});
+render();
+</script>
+
+</body></html>
